@@ -737,7 +737,7 @@
             currentUser = JSON.parse(userData);
 
             // Check if user is a business owner
-            if (currentUser.role !== 'business') {
+            if (currentUser.role !== 'owner') {
                 Swal.fire({
                     title: "Access Denied",
                     text: "You must be a business owner to access this dashboard",

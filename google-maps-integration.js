@@ -42,15 +42,64 @@ function displayLocationMap(elementId, coordinates) {
 // Convert address to coordinates (geocoding)
 function geocodeAddress(address, callback) {
     const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ 'address': address }, function(results, status) {
-        if (status === 'OK') {
-            const location = {
-                latitude: results[0].geometry.location.lat(),
-                longitude: results[0].geometry.location.lng()
-            };
-            callback(null, location);
-        } else {
-            callback(`Geocoding failed: ${status}`, null);
-        }
-    });
+    
+    // If callback is provided, use it (older implementation)
+    if (callback) {
+        geocoder.geocode({ 'address': address }, function(results, status) {
+            if (status === 'OK') {
+                const location = {
+                    latitude: results[0].geometry.location.lat(),
+                    longitude: results[0].geometry.location.lng()
+                };
+                callback(null, location);
+            } else {
+                callback(`Geocoding failed: ${status}`, null);
+            }
+        });
+    } 
+    // Direct implementation for the map on dashboard-businesses
+    else {
+        return new Promise((resolve, reject) => {
+            geocoder.geocode({ 'address': address }, function(results, status) {
+                if (status === 'OK') {
+                    resolve(results[0].geometry.location);
+                } else {
+                    reject(`Geocoding failed: ${status}`);
+                }
+            });
+        });
+    }
+}
+</old_str>
+<new_str>
+// Convert address to coordinates (geocoding)
+function geocodeAddress(address, callback) {
+    const geocoder = new google.maps.Geocoder();
+    
+    // If callback is provided, use it (older implementation)
+    if (callback) {
+        geocoder.geocode({ 'address': address }, function(results, status) {
+            if (status === 'OK') {
+                const location = {
+                    latitude: results[0].geometry.location.lat(),
+                    longitude: results[0].geometry.location.lng()
+                };
+                callback(null, location);
+            } else {
+                callback(`Geocoding failed: ${status}`, null);
+            }
+        });
+    } 
+    // Direct implementation for the map on dashboard-businesses
+    else {
+        return new Promise((resolve, reject) => {
+            geocoder.geocode({ 'address': address }, function(results, status) {
+                if (status === 'OK') {
+                    resolve(results[0].geometry.location);
+                } else {
+                    reject(`Geocoding failed: ${status}`);
+                }
+            });
+        });
+    }
 }

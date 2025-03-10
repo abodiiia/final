@@ -464,7 +464,8 @@
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPNvJy8vKpj1wZdbl-EU_yTU56xNwyPac&libraries=places"></script> <script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPNvJy8vKpj1wZdbl-EU_yTU56xNwyPac&libraries=places&loading=async"></script>
+    <script>
         // User data
         let currentUser = null;
 
@@ -1061,16 +1062,57 @@
 
         function geocodeAddress(address) {
             const geocoder = new google.maps.Geocoder();
+            const locationMap = document.getElementById('location-map');
+            
+            // Make sure the map is visible
+            if (locationMap) {
+                locationMap.style.display = 'block';
+            } else {
+                console.error("Map element not found!");
+                return;
+            }
+            
+            // Initialize map if it doesn't exist
+            if (!map) {
+                map = new google.maps.Map(locationMap, {
+                    center: { lat: 24.7136, lng: 46.6753 }, // Default center (Saudi Arabia)
+                    zoom: 6
+                });
+            }
+            
+            // Add a marker variable if it doesn't exist
+            if (!window.marker) {
+                window.marker = null;
+            }
+            
             geocoder.geocode({ address: address }, (results, status) => {
                 if (status === 'OK') {
                     const location = results[0].geometry.location;
                     map.setCenter(location);
                     map.setZoom(12);
+                    
+                    // Remove previous marker if exists
+                    if (window.marker) {
+                        window.marker.setMap(null);
+                    }
+                    
+                    // Add a new marker
+                    window.marker = new google.maps.Marker({
+                        position: location,
+                        map: map,
+                        animation: google.maps.Animation.DROP
+                    });
+                    
+                    // Set form values
                     document.getElementById('hotel-latitude').value = location.lat();
                     document.getElementById('hotel-longitude').value = location.lng();
-                    document.getElementById('location-map').style.display = 'block';
                 } else {
-                    console.log('Geocode was not successful for the following reason: ' + status);
+                    console.error('Geocode was not successful: ' + status);
+                    Swal.fire({
+                        title: "Location Error",
+                        text: "Could not find this location. Please try a different address.",
+                        icon: "error"
+                    });
                 }
             });
         }

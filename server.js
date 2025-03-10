@@ -35,6 +35,13 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', { root: './' });
 });
 
+// Route to serve Google Maps API key
+app.get('/api/maps/key', (req, res) => {
+    // Use environment variable or fallback to the existing key
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyDPNvJy8vKpj1wZdbl-EU_yTU56xNwyPac';
+    res.json({ key: apiKey });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/events", eventRoutes);

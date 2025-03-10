@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotels - AI-Powered Tourism</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=places"></script>
+    <script src="google-maps-integration.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -264,14 +266,21 @@
                 
                 let mapHtml = '';
                 if (hotel.coordinates && hotel.coordinates.latitude && hotel.coordinates.longitude) {
+                    const mapId = `map-${hotel.id}`;
                     mapHtml = `
                         <div style="margin-top: 15px;">
                             <h4>Location</h4>
+                            <div id="${mapId}" style="width: 100%; height: 250px; border-radius: 5px; margin-bottom: 10px;"></div>
                             <a href="https://maps.google.com/?q=${hotel.coordinates.latitude},${hotel.coordinates.longitude}" target="_blank" style="display: block; padding: 10px; background: #1D4ED8; color: white; text-decoration: none; border-radius: 5px; text-align: center;">
                                 View on Google Maps
                             </a>
                         </div>
                     `;
+                    
+                    // Initialize map after the dialog is shown
+                    setTimeout(() => {
+                        displayLocationMap(mapId, hotel.coordinates);
+                    }, 300);
                 }
                 
                 Swal.fire({

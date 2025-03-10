@@ -426,13 +426,18 @@
             <span class="close-btn" id="close-hotel-modal">❌</span>
             <h3 id="hotel-modal-title">Add New Hotel</h3>
             <input type="text" id="hotel-name" placeholder="Hotel Name">
-            <input type="text" id="hotel-location" placeholder="Location">
+            <label for="hotel-location">Location:</label>
+            <input type="text" id="hotel-location" placeholder="e.g. Abha, Saudi Arabia" required>
+            <div style="margin-top: 10px;">
+                <button type="button" id="locate-on-map" style="background: #1D4ED8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Locate on Map</button>
+            </div>
+            <div id="location-map" style="width: 100%; height: 200px; margin-top: 10px; display: none;"></div>
             <input type="number" id="hotel-price" placeholder="Price per night">
             <textarea id="hotel-description" placeholder="Hotel Description" style="resize: none;"></textarea>
             <input type="text" id="hotel-features" placeholder="Features (comma separated)">
             <input type="file" id="hotel-images" multiple accept="image/*">
-            <input type="text" id="hotel-latitude" placeholder="Latitude">
-            <input type="text" id="hotel-longitude" placeholder="Longitude">
+            <input type="hidden" id="hotel-latitude">
+            <input type="hidden" id="hotel-longitude">
             <div id="hotel-images-preview" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;"></div>
             <input type="hidden" id="hotel-id">
             <button id="save-hotel">Save Hotel</button>
@@ -450,8 +455,6 @@
             <textarea id="event-description" placeholder="Event Description" style="resize: none;"></textarea>
             <input type="datetime-local" id="event-date" placeholder="Event Date">
             <input type="number" id="event-capacity" placeholder="Capacity">
-            <input type="text" id="event-latitude" placeholder="Latitude">
-            <input type="text" id="event-longitude" placeholder="Longitude">
             <input type="file" id="event-images" multiple accept="image/*">
             <div id="event-images-preview" style="display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0;"></div>
             <input type="hidden" id="event-id">
@@ -461,7 +464,7 @@
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script> <script>
         // User data
         let currentUser = null;
 
@@ -509,6 +512,7 @@
                 document.getElementById("hotel-latitude").value = "";
                 document.getElementById("hotel-longitude").value = "";
                 document.getElementById("hotel-modal").style.display = "flex";
+                initMap(); // Initialize map on modal open
             });
 
             document.getElementById("close-hotel-modal").addEventListener("click", () => {
@@ -527,8 +531,6 @@
                 document.getElementById("event-images").value = "";
                 document.getElementById("event-images-preview").innerHTML = "";
                 document.getElementById("event-id").value = "";
-                document.getElementById("event-latitude").value = "";
-                document.getElementById("event-longitude").value = "";
                 document.getElementById("event-modal").style.display = "flex";
             });
 
@@ -545,8 +547,8 @@
                 const features = document.getElementById("hotel-features").value.trim().split(',').map(f => f.trim()).filter(f => f);
                 const imagesInput = document.getElementById("hotel-images").files;
                 const hotelId = document.getElementById("hotel-id").value;
-                const latitude = document.getElementById("hotel-latitude").value;
-                const longitude = document.getElementById("hotel-longitude").value;
+                const latitude = document.getElementById('hotel-latitude').value;
+                const longitude = document.getElementById('hotel-longitude').value;
 
                 if (!name || !location || !price || !description) {
                     Swal.fire("Error!", "Please fill all required fields!", "error");
@@ -630,8 +632,6 @@
                 const capacity = document.getElementById("event-capacity").value.trim();
                 const imagesInput = document.getElementById("event-images").files;
                 const eventId = document.getElementById("event-id").value;
-                const latitude = document.getElementById("event-latitude").value;
-                const longitude = document.getElementById("event-longitude").value;
 
                 if (!name || !location || !price || !description || !date || !capacity) {
                     Swal.fire("Error!", "Please fill all required fields!", "error");
@@ -663,11 +663,7 @@
                             description,
                             date,
                             capacity: Number(capacity),
-                            updatedAt: new Date().toISOString(),
-                            coordinates: {
-                                latitude: latitude || null,
-                                longitude: longitude || null
-                            }
+                            updatedAt: new Date().toISOString()
                         };
 
                         if (imageUrls.length > 0) {
@@ -687,10 +683,6 @@
                         date,
                         capacity: Number(capacity),
                         images: imageUrls,
-                        coordinates: {
-                            latitude: latitude || null,
-                            longitude: longitude || null
-                        },
                         registeredUsers: [],
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
@@ -723,6 +715,12 @@
             document.getElementById("logout-btn").addEventListener("click", function() {
                 localStorage.removeItem("user");
                 window.location.href = "Login.html";
+            });
+
+            // Map functionality
+            document.getElementById('locate-on-map').addEventListener('click', () => {
+                const locationInput = document.getElementById('hotel-location');
+                geocodeAddress(locationInput.value);
             });
         });
 
@@ -879,6 +877,7 @@
             }
 
             document.getElementById("hotel-modal").style.display = "flex";
+            initMap(); // Initialize map on modal open
         }
 
         // Edit event
@@ -894,8 +893,6 @@
             document.getElementById("event-date").value = event.date;
             document.getElementById("event-capacity").value = event.capacity;
             document.getElementById("event-id").value = event.id;
-            document.getElementById("event-latitude").value = event.coordinates ? event.coordinates.latitude : '';
-            document.getElementById("event-longitude").value = event.coordinates ? event.coordinates.longitude : '';
 
             // Display existing images
             const previewContainer = document.getElementById("event-images-preview");
@@ -1021,6 +1018,49 @@
                 });
             }
         }
+
+        // Google Maps functionality
+        let map;
+
+        function initMap() {
+            const locationMap = document.getElementById('location-map');
+            map = new google.maps.Map(locationMap, {
+                center: { lat: 21.5433, lng: 39.1729 }, // Default center (Saudi Arabia)
+                zoom: 4
+            });
+
+            const autocomplete = new google.maps.places.Autocomplete(document.getElementById('hotel-location'));
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    const location = place.geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(12);
+                    document.getElementById('hotel-latitude').value = location.lat();
+                    document.getElementById('hotel-longitude').value = location.lng();
+                } else {
+                    console.log("No geometry found for this place");
+                }
+            });
+        }
+
+
+        function geocodeAddress(address) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === 'OK') {
+                    const location = results[0].geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(12);
+                    document.getElementById('hotel-latitude').value = location.lat();
+                    document.getElementById('hotel-longitude').value = location.lng();
+                    document.getElementById('location-map').style.display = 'block';
+                } else {
+                    console.log('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+
     </script>
 </body>
 </html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .user-list {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #search-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #search-box:focus {
+            border-color: #1ABC9C;
+            box-shadow: 0 0 8px rgba(26, 188, 156, 0.5);
+            outline: none;
+        }
+
+        /* Add button */
+        button#add-user {
+            background: #0033ff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button#add-user:hover {
+            background: #406cff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        /* Delete button */
+        .delete-btn {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #C0392B;
+            transform: scale(1.05);
+        }
+
+        /* No results message */
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-style: italic;
+        }
+
+        .logout-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #555;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <h1>Admin Dashboard</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="user-list">
+            <h2>User Management</h2>
+            <input type="text" id="search-box" placeholder="Search users by name, email or role...">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button id="add-user">+ Add Business Owner</button>
+                <button id="add-regular-user" style="background: #0033ff; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.3s ease-in-out; font-size: 16px; font-weight: bold;">+ Add Regular User</button>
+                <button id="add-admin-user" style="background: #E74C3C; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.3s ease-in-out; font-size: 16px; font-weight: bold;">+ Add Admin</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table">
+                    <!-- Users will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display users
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/auth/users');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                document.getElementById('user-table').innerHTML = 
+                    '<tr><td colspan="4" class="no-results">Error loading users. Please try again later.</td></tr>';
+
+                // Initialize with mock data when API fails
+                initializeWithMockUsers();
+            }
+        }
+
+        // Display users in the table
+        function displayUsers(users) {
+            const tableBody = document.querySelector('table tbody');
+            tableBody.innerHTML = '';
+
+            // Make sure users is an array before filtering
+            if (!Array.isArray(users)) {
+                console.error("Users data is not an array:", users);
+                return;
+            }
+
+            const searchTerm = document.getElementById('search-box').value.toLowerCase();
+            const filteredUsers = users.filter(user => {
+                return user.name.toLowerCase().includes(searchTerm) || 
+                       user.email.toLowerCase().includes(searchTerm) || 
+                       user.role.toLowerCase().includes(searchTerm);
+            });
+
+            filteredUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-user-id', user._id);
+                row.innerHTML = `
+                    <td>${user.name || 'N/A'}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${user.role || 'user'}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteUser('${user._id}')">🗑️ Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (filteredUsers.length === 0) {
+                const noResultsRow = document.createElement('tr');
+                noResultsRow.innerHTML = '<td colspan="4" class="no-results">No matching users found</td>';
+                tableBody.appendChild(noResultsRow);
+            }
+        }
+
+        // Fallback initialization if fetching fails
+        function initializeWithMockUsers() {
+            const mockUsers = [
+                { _id: '1', name: 'Admin User', email: 'admin@example.com', role: 'admin' },
+                { _id: '2', name: 'Business Owner', email: 'business@example.com', role: 'owner' },
+                { _id: '3', name: 'Regular User', email: 'user@example.com', role: 'user' }
+            ];
+            displayUsers(mockUsers);
+        }
+
+        // Search functionality
+        document.getElementById('search-box').addEventListener('keyup', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#user-table tr');
+
+            let foundAny = false;
+
+            rows.forEach(row => {
+                // Skip if it's the no-results row
+                if (row.id === 'no-results-row') return;
+
+                // Make sure row has cells before accessing them
+                if (!row.cells || row.cells.length < 3) return;
+
+                const name = row.cells[0].textContent.toLowerCase();
+                const email = row.cells[1].textContent.toLowerCase();
+                const role = row.cells[2].textContent.toLowerCase();
+
+                if (name.includes(query) || email.includes(query) || role.includes(query)) {
+                    row.style.display = '';
+                    foundAny = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // If no results found after filtering
+            if (!foundAny && rows.length > 0) {
+                const userTable = document.getElementById('user-table');
+                // Remove existing no-results row if it exists
+                const existingNoResultsRow = document.getElementById('no-results-row');
+                if (existingNoResultsRow) {
+                    existingNoResultsRow.remove();
+                }
+
+                const noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'no-results-row';
+                noResultsRow.innerHTML = '<td colspan="4" class="no-results">No matching users found</td>';
+                userTable.appendChild(noResultsRow);
+            } else {
+                // Remove the no results message if it exists
+                const noResultsRow = document.getElementById('no-results-row');
+                if (noResultsRow) {
+                    noResultsRow.remove();
+                }
+            }
+        });
+
+        // Delete user function
+        async function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                try {
+                    const response = await fetch(`/api/auth/users/${userId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        // Remove the row from UI
+                        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                        if (row) {
+                            row.remove();
+                        }
+                        alert('User deleted successfully');
+
+                        // Refresh user list to make sure it's up to date
+                        fetchUsers();
+                    } else {
+                        const data = await response.json();
+                        alert('Error deleting user: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error deleting user: ' + error.message);
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'Login.html';
+        }
+
+        // Add business owner button
+        document.getElementById('add-user').addEventListener('click', function() {
+            window.location.href = 'Register businesses  Owner.html';
+        });
+
+        // Add regular user button
+        document.getElementById('add-regular-user').addEventListener('click', function() {
+            window.location.href = 'Register.html';
+        });
+
+        // Add admin user button
+        document.getElementById('add-admin-user').addEventListener('click', function() {
+            // سنضيف صفحة خاصة لإضافة المشرفين أو يمكن إنشاء مشرف مباشرة
+            window.location.href = 'RegisterAdmin.html';
+        });
+
+        // Check if user is logged in and is admin
+        function checkAdmin() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                alert('You must be logged in as admin.');
+                window.location.href = 'Login.html';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userData);
+                if (user.role !== 'admin') {
+                    alert('You do not have permission to view this page.');
+                    window.location.href = 'index.html';
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+                localStorage.removeItem('user');
+                window.location.href = 'Login.html';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdmin();
+            fetchUsers();
+        });
+    </script>
+</body>
+</html>

@@ -717,9 +717,23 @@
                 window.location.href = "Login.html";
             });
 
-            // Map functionality
+            // Map functionality for hotel location
             document.getElementById('locate-on-map').addEventListener('click', () => {
                 const locationInput = document.getElementById('hotel-location');
+                const locationMap = document.getElementById('location-map');
+
+                // Make sure map is visible
+                locationMap.style.display = 'block';
+
+                // Initialize map if not already initialized
+                if (!map) {
+                    map = new google.maps.Map(locationMap, {
+                        center: { lat: 24.7136, lng: 46.6753 }, // Default center (Saudi Arabia)
+                        zoom: 6
+                    });
+                }
+
+                // Geocode the address
                 geocodeAddress(locationInput.value);
             });
         });

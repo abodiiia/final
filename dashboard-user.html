@@ -611,3 +611,183 @@
 
 
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Tourism System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .content-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .user-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .user-info p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .bookings-section {
+            margin-top: 30px;
+        }
+
+        .booking-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0033ff;
+        }
+
+        .logout-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #555;
+        }
+
+        .home-btn {
+            background: #0033ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .home-btn:hover {
+            background: #0022cc;
+        }
+
+        .button-group {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <h1>User Dashboard</h1>
+            <div class="button-group">
+                <button class="home-btn" onclick="window.location.href='index.html'">Home</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="user-info">
+                <h2>Welcome, <span id="user-name">User</span>!</h2>
+                <p>Email: <span id="user-email">user@example.com</span></p>
+                <p>Account Type: <span id="user-role">Regular User</span></p>
+            </div>
+
+            <div class="bookings-section">
+                <h2>Your Bookings</h2>
+                <div id="bookings-container">
+                    <!-- Bookings will be loaded here -->
+                    <div class="booking-card">
+                        <h3>Hotel Booking Example</h3>
+                        <p>Hotel: Sample Hotel</p>
+                        <p>Date: 2023-10-15 to 2023-10-18</p>
+                        <p>Status: Confirmed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user info on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoggedIn();
+            loadUserInfo();
+            // In a real app, you would also load the user's bookings here
+        });
+
+        // Check if user is logged in
+        function checkLoggedIn() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                alert('You must be logged in to view this page.');
+                window.location.href = 'Login.html';
+                return;
+            }
+        }
+
+        // Load user information
+        function loadUserInfo() {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    document.getElementById('user-name').textContent = user.name || 'User';
+                    document.getElementById('user-email').textContent = user.email || 'No email provided';
+                    document.getElementById('user-role').textContent = 
+                        user.role === 'user' ? 'Regular User' : 
+                        user.role === 'owner' ? 'Business Owner' : 
+                        user.role === 'admin' ? 'Administrator' : 'User';
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

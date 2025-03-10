@@ -523,7 +523,8 @@ nav ul li a:hover {
                 <li><a href="#">Contact</a></li>
             </ul>
         </nav>
-        <button class="login-btn" onclick="redirectToLogin()">Login</button>
+        <button id="loginBtn" class="login-btn" onclick="redirectToLogin()">Login</button>
+    <button id="dashboardBtn" class="login-btn" style="display: none;" onclick="redirectToDashboard()">Dashboard</button>
     </header>
 
     <!-- قسم الإنشاء -->
@@ -779,13 +780,42 @@ document.addEventListener("DOMContentLoaded", function () {
      
      <script>
         function redirectToLogin() {
-            window.location.href = "Login.html"; // 🔹 غير الرابط حسب مسار صفحة تسجيل الدخول الفعلي
+            window.location.href = "Login.html";
         }
-        </script>
-    
-        <script>
+        
+        function redirectToDashboard() {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                // Redirect based on user role
+                if (user.role === 'admin') {
+                    window.location.href = "dashboard-Admin.html";
+                } else if (user.role === 'owner') {
+                    window.location.href = "dashboard-businesses.html";
+                } else {
+                    window.location.href = "dashboard-user.html";
+                }
+            } else {
+                window.location.href = "Login.html";
+            }
+        }
+        
         function redirectTo() {
             window.location.href = "Page-1.html";
         }
+        
+        // Check if user is logged in when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                // User is logged in, show dashboard button
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('dashboardBtn').style.display = 'block';
+            } else {
+                // User is not logged in, show login button
+                document.getElementById('loginBtn').style.display = 'block';
+                document.getElementById('dashboardBtn').style.display = 'none';
+            }
+        });
         </script>
 </body></html>

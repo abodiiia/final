@@ -429,7 +429,7 @@
             <label for="hotel-location">Location:</label>
             <input type="text" id="hotel-location" placeholder="e.g. Abha, Saudi Arabia" required>
             <div style="margin-top: 10px;">
-                <button type="button" id="locate-on-map" style="background: #1D4ED8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Locate on Map</button>
+                <button type="button" id="locate-on-map" style="background: #1D4ED8; color: white; border: none; padding:                 5px 10px; border-radius: 5px; cursor: pointer;">Locate on Map</button>
             </div>
             <div id="location-map" style="width: 100%; height: 200px; margin-top: 10px; display: none;"></div>
             <input type="number" id="hotel-price" placeholder="Price per night">
@@ -793,7 +793,8 @@
                         <div class="item-title">${hotel.name}</div>
                         <div class="item-location">📍 ${hotel.location}</div>
                         <div class="item-price">💲 ${hotel.price} SR per night</div>
-                        <div class="item-description">${hotel.description.substring(0, 100)}${hotel.description.length > 100 ? '...' : ''}</div>
+                        <div class="item-description"> ${hotel.description.substring(0, 100)}${hotel.description.length > 100 ? '...' : ''} 
+                        </div>
                         <div class="item-actions">
                             <button class="button edit-btn" onclick="editHotel('${hotel.id}')">✏️ Edit</button>
                             <button class="button delete-btn" onclick="confirmDeleteHotel('${hotel.id}')">🗑️ Delete</button>

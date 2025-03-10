@@ -1,5 +1,5 @@
 
-// Google Maps API Integration
+// Google Maps API Integration with key: AIzaSyDPNvJy8vKpj1wZdbl-EU_yTU56xNwyPac
 
 // Initialize the map
 function initMap(elementId, lat, lng, zoom = 15) {

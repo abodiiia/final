@@ -272,16 +272,45 @@
             const event = events.find(e => e.id === eventId);
             
             if (event) {
-                // For now, just show an alert with details
-                // In the future, you can redirect to a detailed page
-                alert(`
-                    Event: ${event.name}
-                    Location: ${event.location}
-                    Date: ${formatEventDate(event.date)}
-                    Price: ${event.price} SR
-                    Description: ${event.description}
-                    Capacity: ${event.capacity} people
-                `);
+                // Create a more comprehensive details view with SweetAlert2
+                let imagesHtml = '';
+                if (event.images && event.images.length > 0) {
+                    imagesHtml = `
+                        <div style="margin-bottom: 15px;">
+                            <img src="${event.images[0]}" style="width: 100%; border-radius: 5px;">
+                        </div>
+                    `;
+                }
+                
+                let mapHtml = '';
+                if (event.coordinates && event.coordinates.latitude && event.coordinates.longitude) {
+                    mapHtml = `
+                        <div style="margin-top: 15px;">
+                            <h4>Location</h4>
+                            <a href="https://maps.google.com/?q=${event.coordinates.latitude},${event.coordinates.longitude}" target="_blank" style="display: block; padding: 10px; background: #1D4ED8; color: white; text-decoration: none; border-radius: 5px; text-align: center;">
+                                View on Google Maps
+                            </a>
+                        </div>
+                    `;
+                }
+                
+                Swal.fire({
+                    title: event.name,
+                    html: `
+                        ${imagesHtml}
+                        <div style="text-align: left; margin-bottom: 15px;">
+                            <p><strong>Location:</strong> ${event.location}</p>
+                            <p><strong>Date:</strong> ${formatEventDate(event.date)}</p>
+                            <p><strong>Price:</strong> ${event.price} SR</p>
+                            <p><strong>Description:</strong> ${event.description}</p>
+                            <p><strong>Capacity:</strong> ${event.capacity} people</p>
+                        </div>
+                        ${mapHtml}
+                    `,
+                    width: 600,
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#1D4ED8'
+                });
             }
         }
         

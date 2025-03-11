@@ -823,13 +823,13 @@
                                 return;
                             }
                             
-                            // Update booking status
-                            bookings[index].status = 'cancelled';
+                            // Remove the booking completely instead of just marking it cancelled
+                            bookings.splice(index, 1);
                             
                             // Save updated bookings
                             localStorage.setItem("bookings", JSON.stringify(bookings));
                             
-                            alert('Booking cancelled successfully');
+                            alert('Booking cancelled and removed successfully');
                             loadUserBookings(); // Reload bookings
                         } catch (error) {
                             console.error('Error cancelling booking:', error);

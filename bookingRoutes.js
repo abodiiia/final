@@ -99,15 +99,16 @@ router.put('/:id/cancel', async (req, res) => {
             return res.status(404).json({ message: "Booking not found" });
         }
         
-        // Update booking status
-        bookings[index].status = 'cancelled';
+        // Remove the booking completely
+        const cancelledBooking = bookings[index];
+        bookings.splice(index, 1);
         
         // Save updated bookings
         localStorage.setItem("bookings", JSON.stringify(bookings));
         
         res.json({
-            message: "Booking cancelled successfully",
-            booking: bookings[index]
+            message: "Booking cancelled and removed successfully",
+            booking: cancelledBooking
         });
     } catch (error) {
         console.error("Error cancelling booking:", error);

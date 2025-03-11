@@ -258,12 +258,21 @@
             // Get existing bookings or create empty array
             const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
             
+            // Get user data
+            const userData = localStorage.getItem('user');
+            const user = userData ? JSON.parse(userData) : null;
+            
             // Create final booking object with confirmed status
             const booking = {
                 ...tempBookingDetails,
                 id: Date.now().toString(),
+                userId: user ? user.id || user._id : 'guest',
+                userEmail: user ? user.email : 'guest@example.com',
                 status: 'confirmed',
                 createdAt: new Date().toISOString(),
+                itemName: resortName,
+                itemType: 'hotel', // Or 'event' based on what was booked
+                totalPrice: totalAmount,
                 paymentInfo: {
                     method: 'creditcard',
                     bank: bank,

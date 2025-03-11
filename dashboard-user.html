@@ -753,47 +753,55 @@
             </div>
 
             <script>
-                // Function to load user bookings
-                async function loadUserBookings() {
+                // Function to load user bookings from localStorage
+                function loadUserBookings() {
                     const userData = localStorage.getItem('user');
                     if (!userData) return;
 
                     const user = JSON.parse(userData);
                     const bookingsContainer = document.getElementById('bookings-container');
-
+                    
                     try {
-                        const response = await fetch(`/api/bookings/user/${user.id}`);
+                        // Get bookings from localStorage
+                        const allBookings = JSON.parse(localStorage.getItem('bookings')) || [];
+                        
+                        // Filter bookings for current user
+                        const userBookings = allBookings.filter(booking => 
+                            booking.userId === user.id || 
+                            booking.userId === user._id || 
+                            booking.userEmail === user.email
+                        );
+                        
+                        bookingsContainer.innerHTML = '';
 
-                        if (response.ok) {
-                            const bookings = await response.json();
-                            bookingsContainer.innerHTML = '';
-
-                            if (bookings.length === 0) {
-                                bookingsContainer.innerHTML = '<p>You have no bookings yet.</p>';
-                                return;
-                            }
-
-                            bookings.forEach(booking => {
-                                const bookingCard = document.createElement('div');
-                                bookingCard.className = 'booking-card';
-
-                                const startDate = new Date(booking.startDate).toLocaleDateString();
-                                const endDate = booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A';
-
-                                bookingCard.innerHTML = `
-                                    <h3>${booking.itemType.charAt(0).toUpperCase() + booking.itemType.slice(1)} Booking</h3>
-                                    <p>Date: ${startDate} ${booking.endDate ? 'to ' + endDate : ''}</p>
-                                    <p>Guests: ${booking.guests}</p>
-                                    <p>Total: $${booking.totalPrice}</p>
-                                    <p>Status: <span class="${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></p>
-                                    ${booking.status !== 'cancelled' ? `<button class="cancel-btn" onclick="cancelBooking('${booking._id}')">Cancel Booking</button>` : ''}
-                                `;
-
-                                bookingsContainer.appendChild(bookingCard);
-                            });
-                        } else {
-                            bookingsContainer.innerHTML = '<p>Could not load bookings. Please try again later.</p>';
+                        if (userBookings.length === 0) {
+                            bookingsContainer.innerHTML = '<p>You have no bookings yet.</p>';
+                            return;
                         }
+
+                        userBookings.forEach(booking => {
+                            const bookingCard = document.createElement('div');
+                            bookingCard.className = 'booking-card';
+
+                            // Format dates if they exist
+                            const startDate = booking.startDate ? new Date(booking.startDate).toLocaleDateString() : '';
+                            const endDate = booking.endDate ? new Date(booking.endDate).toLocaleDateString() : '';
+                            const eventDate = booking.eventDate ? new Date(booking.eventDate).toLocaleDateString() : '';
+
+                            bookingCard.innerHTML = `
+                                <h3>${booking.itemName || 'Booking'}</h3>
+                                <p>Type: ${booking.itemType || 'Unknown'}</p>
+                                ${startDate ? `<p>Start Date: ${startDate}</p>` : ''}
+                                ${endDate ? `<p>End Date: ${endDate}</p>` : ''}
+                                ${eventDate ? `<p>Event Date: ${eventDate}</p>` : ''}
+                                <p>Guests: ${booking.guests || booking.attendees || 1}</p>
+                                <p>Total: ${booking.totalPrice} SAR</p>
+                                <p>Status: <span class="${booking.status || 'confirmed'}">${(booking.status || 'confirmed').charAt(0).toUpperCase() + (booking.status || 'confirmed').slice(1)}</span></p>
+                                ${(booking.status !== 'cancelled') ? `<button class="cancel-btn" onclick="cancelBooking('${booking.id}')">Cancel Booking</button>` : ''}
+                            `;
+
+                            bookingsContainer.appendChild(bookingCard);
+                        });
                     } catch (error) {
                         console.error('Error loading bookings:', error);
                         bookingsContainer.innerHTML = '<p>Error loading bookings. Please try again later.</p>';
@@ -801,19 +809,28 @@
                 }
 
                 // Function to cancel a booking
-                async function cancelBooking(bookingId) {
+                function cancelBooking(bookingId) {
                     if (confirm('Are you sure you want to cancel this booking?')) {
                         try {
-                            const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
-                                method: 'PUT'
-                            });
-
-                            if (response.ok) {
-                                alert('Booking cancelled successfully');
-                                loadUserBookings(); // Reload bookings
-                            } else {
-                                alert('Failed to cancel booking. Please try again.');
+                            // Get existing bookings
+                            const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+                            
+                            // Find the booking
+                            const index = bookings.findIndex(b => b.id === bookingId);
+                            
+                            if (index === -1) {
+                                alert("Booking not found");
+                                return;
                             }
+                            
+                            // Update booking status
+                            bookings[index].status = 'cancelled';
+                            
+                            // Save updated bookings
+                            localStorage.setItem("bookings", JSON.stringify(bookings));
+                            
+                            alert('Booking cancelled successfully');
+                            loadUserBookings(); // Reload bookings
                         } catch (error) {
                             console.error('Error cancelling booking:', error);
                             alert('Error cancelling booking. Please try again later.');

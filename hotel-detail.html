@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -326,7 +325,7 @@
         // Get hotel ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const hotelId = urlParams.get('id');
-        
+
         // Load hotel details
         function loadHotelDetails() {
             if (!hotelId) {
@@ -338,10 +337,10 @@
                 `;
                 return;
             }
-            
+
             const hotels = JSON.parse(localStorage.getItem("hotels")) || [];
             const hotel = hotels.find(h => h.id === hotelId);
-            
+
             if (!hotel) {
                 document.getElementById('hotel-details').innerHTML = `
                     <div style="text-align: center; padding: 50px;">
@@ -351,7 +350,7 @@
                 `;
                 return;
             }
-            
+
             // Prepare images
             let galleryHtml = '';
             if (hotel.images && hotel.images.length > 0) {
@@ -361,7 +360,7 @@
                         <img src="${hotel.images[0]}" alt="${hotel.name}" onclick="openImageModal('${hotel.images[0]}')">
                     </div>
                 `;
-                
+
                 // Additional images (up to 4 more)
                 for (let i = 1; i < Math.min(5, hotel.images.length); i++) {
                     galleryHtml += `
@@ -378,7 +377,7 @@
                     </div>
                 `;
             }
-            
+
             // Prepare features
             let featuresHtml = '';
             if (hotel.features && hotel.features.length > 0) {
@@ -386,18 +385,18 @@
             } else {
                 featuresHtml = '<li class="feature-item">Standard Amenities</li>';
             }
-            
+
             // Calculate tomorrow's date and the day after for default date values
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const dayAfter = new Date(today);
             dayAfter.setDate(dayAfter.getDate() + 2);
-            
+
             const formatDate = (date) => {
                 return date.toISOString().split('T')[0];
             };
-            
+
             // Render hotel details
             document.getElementById('hotel-details').innerHTML = `
                 <div class="hotel-header">
@@ -407,28 +406,28 @@
                     </div>
                     <div class="hotel-price">${hotel.price} SR per night</div>
                 </div>
-                
+
                 <div class="gallery">
                     ${galleryHtml}
                 </div>
-                
+
                 <div class="hotel-description">
                     <h2>About this hotel</h2>
                     <p>${hotel.description}</p>
                 </div>
-                
+
                 <div class="features-section">
                     <h2>Features & Amenities</h2>
                     <ul class="features-list">
                         ${featuresHtml}
                     </ul>
                 </div>
-                
+
                 <div class="map-section">
                     <h2>Location</h2>
                     <div id="hotel-map"></div>
                 </div>
-                
+
                 <div class="booking-section">
                     <h2>Book Your Stay</h2>
                     <div class="booking-form">
@@ -452,7 +451,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="booking-summary">
                             <h3>Booking Summary</h3>
                             <div class="summary-row">
@@ -467,12 +466,12 @@
                                 <span>Total price</span>
                                 <span id="total-price">${hotel.price} SR</span>
                             </div>
-                            
+
                             <button class="book-btn" onclick="bookHotel()">Book Now</button>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="reviews-section">
                     <h2>Guest Reviews</h2>
                     <div id="reviews-container">
@@ -480,30 +479,30 @@
                     </div>
                 </div>
             `;
-            
+
             // Initialize map if coordinates are available
             if (hotel.coordinates && hotel.coordinates.latitude && hotel.coordinates.longitude) {
                 setTimeout(() => {
                     initMap('hotel-map', parseFloat(hotel.coordinates.latitude), parseFloat(hotel.coordinates.longitude));
                 }, 500);
             }
-            
+
             // Calculate booking total
             updateBookingSummary();
-            
+
             // Add event listeners for date changes
             document.getElementById('check-in').addEventListener('change', updateBookingSummary);
             document.getElementById('check-out').addEventListener('change', updateBookingSummary);
-            
+
             // Load reviews
             loadReviews(hotel);
         }
-        
+
         // Calculate and update booking summary
         function updateBookingSummary() {
             const checkInDate = new Date(document.getElementById('check-in').value);
             const checkOutDate = new Date(document.getElementById('check-out').value);
-            
+
             // Validate dates
             if (checkOutDate <= checkInDate) {
                 const tomorrow = new Date(checkInDate);
@@ -511,21 +510,21 @@
                 document.getElementById('check-out').value = tomorrow.toISOString().split('T')[0];
                 checkOutDate.setTime(tomorrow.getTime());
             }
-            
+
             // Calculate number of nights
             const nights = Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-            
+
             // Get price per night
             const hotels = JSON.parse(localStorage.getItem("hotels")) || [];
             const hotel = hotels.find(h => h.id === hotelId);
             const pricePerNight = hotel ? hotel.price : 0;
-            
+
             // Update summary
             const totalPrice = pricePerNight * nights;
             document.getElementById('num-nights').textContent = nights;
             document.getElementById('total-price').textContent = `${totalPrice} SR`;
         }
-        
+
         // Book hotel function
         function bookHotel() {
             const userData = localStorage.getItem('user');
@@ -543,59 +542,62 @@
                 });
                 return;
             }
-            
+
             const user = JSON.parse(userData);
             const hotels = JSON.parse(localStorage.getItem("hotels")) || [];
             const hotel = hotels.find(h => h.id === hotelId);
-            
+
             if (!hotel) {
                 Swal.fire('Error', 'Hotel not found', 'error');
                 return;
             }
-            
+
             const checkInDate = document.getElementById('check-in').value;
             const checkOutDate = document.getElementById('check-out').value;
             const guests = document.getElementById('guests').value;
             const nights = document.getElementById('num-nights').textContent;
             const totalPrice = document.getElementById('total-price').textContent.replace(' SR', '');
-            
-            // Save booking details to localStorage for payment page
-            localStorage.setItem("stayDays", nights);
-            localStorage.setItem("totalPrice", totalPrice);
-            localStorage.setItem("startDate", checkInDate);
-            localStorage.setItem("endDate", checkOutDate);
-            localStorage.setItem("resortName", hotel.name);
-            localStorage.setItem("resortLocation", hotel.location);
-            localStorage.setItem("tempBookingDetails", JSON.stringify({
-                userId: user.id,
+
+            // Store booking details for payment page
+            const bookingDetails = {
                 itemId: hotel.id,
-                itemType: 'hotel',
                 itemName: hotel.name,
+                itemType: 'hotel',
                 startDate: checkInDate,
                 endDate: checkOutDate,
-                guests: parseInt(guests),
-                totalPrice: parseInt(totalPrice),
-                status: 'pending'
-            }));
-            
+                guests: guests,
+                nights: nights,
+                pricePerNight: hotel.price,
+                totalPrice: totalPrice,
+                location: hotel.location
+            };
+
+            // Save to localStorage for payment page
+            localStorage.setItem("tempBookingDetails", JSON.stringify(bookingDetails));
+            localStorage.setItem("stayDays", nights);
+            localStorage.setItem("totalPrice", totalPrice);
+            localStorage.setItem("resortName", hotel.name);
+            localStorage.setItem("resortLocation", hotel.location);
+
+
             // Redirect to payment page
             window.location.href = "payment.html";
         }
-        
+
         // Load reviews for hotel
         function loadReviews(hotel) {
             const reviewsContainer = document.getElementById('reviews-container');
-            
+
             if (!hotel.reviews || hotel.reviews.length === 0) {
                 reviewsContainer.innerHTML = `<p>No reviews yet. Be the first to review this hotel!</p>`;
                 return;
             }
-            
+
             let reviewsHtml = '';
             hotel.reviews.forEach(review => {
                 const date = new Date(review.date).toLocaleDateString();
                 const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-                
+
                 reviewsHtml += `
                     <div class="review-card">
                         <div class="review-header">
@@ -607,10 +609,10 @@
                     </div>
                 `;
             });
-            
+
             reviewsContainer.innerHTML = reviewsHtml;
         }
-        
+
         // Open image in modal
         function openImageModal(imageUrl) {
             Swal.fire({
@@ -621,11 +623,11 @@
                 showCloseButton: true
             });
         }
-        
+
         function redirectToLogin() {
             window.location.href = "Login.html";
         }
-        
+
         function redirectToDashboard() {
             const userData = localStorage.getItem('user');
             if (userData) {
@@ -641,7 +643,7 @@
                 window.location.href = "Login.html";
             }
         }
-        
+
         // Check if user is logged in when page loads
         document.addEventListener('DOMContentLoaded', function() {
             const userData = localStorage.getItem('user');
@@ -652,7 +654,7 @@
                 document.getElementById('loginBtn').style.display = 'block';
                 document.getElementById('dashboardBtn').style.display = 'none';
             }
-            
+
             // Load hotel details
             loadHotelDetails();
         });

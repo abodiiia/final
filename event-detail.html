@@ -552,7 +552,7 @@
             }
             
             const attendees = parseInt(document.getElementById('attendees').value);
-            const totalPrice = document.getElementById('total-price').textContent;
+            const totalPrice = document.getElementById('total-price').textContent.replace(' SR', '');
             
             // Check if there are enough spots available
             const registeredCount = event.registeredUsers ? event.registeredUsers.length : 0;
@@ -563,60 +563,39 @@
                 return;
             }
             
-            // Update event registrations
-            if (!event.registeredUsers) {
-                event.registeredUsers = [];
-            }
+            // Format the event date nicely for display
+            const eventDate = new Date(event.date);
+            const formattedDate = eventDate.toLocaleString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
             
-            // Add user to registered users
-            for (let i = 0; i < attendees; i++) {
-                event.registeredUsers.push(user.id);
-            }
+            // Save booking details to localStorage for payment page
+            localStorage.setItem("stayDays", 1);  // Events are typically 1 day
+            localStorage.setItem("totalPrice", totalPrice);
+            localStorage.setItem("startDate", formattedDate);
+            localStorage.setItem("resortName", event.name);
+            localStorage.setItem("resortLocation", event.location);
             
-            // Update the event in localStorage
-            const eventIndex = events.findIndex(e => e.id === eventId);
-            events[eventIndex] = event;
-            localStorage.setItem("events", JSON.stringify(events));
-            
-            // Create booking object
-            const booking = {
-                id: Date.now().toString(),
+            // Store the temporary booking details and event info
+            localStorage.setItem("tempBookingDetails", JSON.stringify({
                 userId: user.id,
                 itemId: event.id,
                 itemType: 'event',
                 itemName: event.name,
                 eventDate: event.date,
                 attendees: attendees,
-                totalPrice: parseInt(totalPrice.replace(' SR', '')),
-                status: 'confirmed',
-                createdAt: new Date().toISOString()
-            };
+                totalPrice: parseInt(totalPrice),
+                status: 'pending',
+                eventRegistration: event.registeredUsers ? [...event.registeredUsers] : []
+            }));
             
-            // Get existing bookings or create empty array
-            const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
-            
-            // Add new booking
-            bookings.push(booking);
-            
-            // Save to localStorage
-            localStorage.setItem("bookings", JSON.stringify(bookings));
-            
-            // Show success message
-            Swal.fire({
-                title: 'Booking Confirmed!',
-                text: `Your spot at ${event.name} has been booked successfully.`,
-                icon: 'success',
-                confirmButtonText: 'View My Bookings',
-                showCancelButton: true,
-                cancelButtonText: 'Stay Here'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = "dashboard-user.html";
-                } else {
-                    // Reload the page to update available spots
-                    window.location.reload();
-                }
-            });
+            // Redirect to payment page
+            window.location.href = "payment.html";
         }
         
         // Open image in modal

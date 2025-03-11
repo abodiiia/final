@@ -182,8 +182,8 @@
         document.getElementById("stay-duration").innerText = days;
         document.getElementById("resort-name").innerText = resortName;
         document.getElementById("resort-location").innerText = resortLocation;
-        document.getElementById("total-price").innerText = `$${totalAmount}`;
-        document.getElementById("initial-payment").innerText = `$${initialPayment}`;
+        document.getElementById("total-price").innerText = `${totalAmount} SAR`;
+        document.getElementById("initial-payment").innerText = `${initialPayment} SAR`;
     
         // Payment button event listener
         document.getElementById("pay-button").addEventListener("click", function () {
@@ -210,8 +210,36 @@
                 return;
             }
     
-            // Save payment status to localStorage (simulate payment confirmation)
+            // Get booking details from localStorage
+            const tempBookingDetails = JSON.parse(localStorage.getItem("tempBookingDetails"));
+            
+            // Get existing bookings or create empty array
+            const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+            
+            // Create final booking object with confirmed status
+            const booking = {
+                ...tempBookingDetails,
+                id: Date.now().toString(),
+                status: 'confirmed',
+                createdAt: new Date().toISOString(),
+                paymentInfo: {
+                    method: 'creditcard',
+                    bank: bank,
+                    cardLastFour: cardNumber.slice(-4),
+                    paidOn: new Date().toISOString()
+                }
+            };
+            
+            // Add new booking
+            bookings.push(booking);
+            
+            // Save to localStorage
+            localStorage.setItem("bookings", JSON.stringify(bookings));
             localStorage.setItem("paymentStatus", "paid");
+            
+            // Clean up temporary data
+            localStorage.removeItem("tempBookingDetails");
+            
             alert("Payment successful! 🎉");
     
             // Redirect to confirmation page

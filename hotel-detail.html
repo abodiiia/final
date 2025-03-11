@@ -557,11 +557,16 @@
             const checkOutDate = document.getElementById('check-out').value;
             const guests = document.getElementById('guests').value;
             const nights = document.getElementById('num-nights').textContent;
-            const totalPrice = document.getElementById('total-price').textContent;
+            const totalPrice = document.getElementById('total-price').textContent.replace(' SR', '');
             
-            // Create booking object
-            const booking = {
-                id: Date.now().toString(),
+            // Save booking details to localStorage for payment page
+            localStorage.setItem("stayDays", nights);
+            localStorage.setItem("totalPrice", totalPrice);
+            localStorage.setItem("startDate", checkInDate);
+            localStorage.setItem("endDate", checkOutDate);
+            localStorage.setItem("resortName", hotel.name);
+            localStorage.setItem("resortLocation", hotel.location);
+            localStorage.setItem("tempBookingDetails", JSON.stringify({
                 userId: user.id,
                 itemId: hotel.id,
                 itemType: 'hotel',
@@ -569,33 +574,12 @@
                 startDate: checkInDate,
                 endDate: checkOutDate,
                 guests: parseInt(guests),
-                totalPrice: parseInt(totalPrice.replace(' SR', '')),
-                status: 'confirmed',
-                createdAt: new Date().toISOString()
-            };
+                totalPrice: parseInt(totalPrice),
+                status: 'pending'
+            }));
             
-            // Get existing bookings or create empty array
-            const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
-            
-            // Add new booking
-            bookings.push(booking);
-            
-            // Save to localStorage
-            localStorage.setItem("bookings", JSON.stringify(bookings));
-            
-            // Show success message
-            Swal.fire({
-                title: 'Booking Confirmed!',
-                text: `Your stay at ${hotel.name} has been booked successfully.`,
-                icon: 'success',
-                confirmButtonText: 'View My Bookings',
-                showCancelButton: true,
-                cancelButtonText: 'Stay Here'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = "dashboard-user.html";
-                }
-            });
+            // Redirect to payment page
+            window.location.href = "payment.html";
         }
         
         // Load reviews for hotel

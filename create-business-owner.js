@@ -1,6 +1,6 @@
-
 const mongoose = require('mongoose');
-const User = require('./models/User');
+const express = require('express');
+const User = require('./models/User'); // Assuming the path is correct, adjust if needed
 const bcrypt = require('bcryptjs');
 const config = require('./config');
 
@@ -12,41 +12,33 @@ mongoose.connect(config.mongoURI, {
 .then(() => console.log('Connected to MongoDB database'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-async function createBusinessOwner() {
+// Function to create a business owner
+async function createBusinessOwner(userData) {
     try {
-        // Check if business owner already exists
-        const existingUser = await User.findOne({ username: 'business' });
-        
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: userData.email });
         if (existingUser) {
-            console.log('Business owner already exists!');
-            console.log(`Username: ${existingUser.username}`);
-            console.log(`Password: business123`);
-            mongoose.disconnect();
-            return;
+            return { success: false, message: 'User with this email already exists' };
         }
-        
-        // Create a new business owner user
-        const businessOwner = new User({
-            name: 'Business Owner',
-            email: 'business@example.com',
-            phone: '1234567890',
-            country: 'Sample Country',
-            username: 'business',
-            password: 'business123',
-            role: 'owner'
+
+        // Create new user with owner role
+        const user = new User({
+            name: userData.name,
+            email: userData.email,
+            password: userData.password,
+            phone: userData.phone,
+            country: userData.country,
+            username: userData.username,
+            role: 'owner' // Ensure role is set to owner
         });
-        
-        await businessOwner.save();
-        
-        console.log('Business owner created successfully!');
-        console.log(`Username: ${businessOwner.username}`);
-        console.log(`Password: business123`);
-        
-        mongoose.disconnect();
+
+        // Save the user
+        await user.save();
+        return { success: true, user };
     } catch (error) {
         console.error('Error creating business owner:', error);
-        mongoose.disconnect();
+        return { success: false, message: 'Server error', error: error.message };
     }
 }
 
-createBusinessOwner();
+module.exports = { createBusinessOwner };

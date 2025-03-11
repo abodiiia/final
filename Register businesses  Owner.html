@@ -183,9 +183,53 @@
             </div>
 
             
-            <div class="btn-register">
-                <a href="Account-Created.html">Register</a>  <!-- رابط تسجيل الدخول -->
-            </div>
+            <button class="btn-register" id="registerOwnerBtn">Register</button>
+            
+            <script>
+                document.getElementById("registerOwnerBtn").addEventListener("click", async function() {
+                    // Get user data
+                    const userData = {
+                        name: document.querySelector('.left-section input[placeholder="Enter your name"]').value,
+                        email: document.querySelector('.left-section input[type="email"]').value,
+                        phone: document.querySelector('.left-section input[placeholder="With Country Code"]').value,
+                        country: document.querySelector('.left-section input[placeholder="Country Name"]').value,
+                        username: document.querySelector('.left-section input[placeholder="Username"]').value,
+                        password: document.querySelector('.left-section input[type="password"]').value,
+                        role: 'owner', // Set role as owner
+                        // Business details
+                        businessName: document.querySelector('.right-section input[placeholder="Full Name"]').value,
+                        registrationNo: document.querySelector('.right-section input[type="text"]').value,
+                        address: document.querySelector('.right-section input[placeholder="Location"]').value,
+                        facilities: document.querySelector('.right-section input[placeholder="Describe"]').value
+                    };
+                    
+                    // Validate inputs
+                    if (!userData.name || !userData.email || !userData.password) {
+                        alert("Please fill all required fields!");
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch("/api/auth/register", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(userData)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            alert("Business owner account created successfully!");
+                            window.location.href = "Account-Created.html";
+                        } else {
+                            alert(data.message || "Registration failed!");
+                        }
+                    } catch (error) {
+                        alert("Server error. Please try again later.");
+                        console.error(error);
+                    }
+                });
+            </script>
 
             <div class="extra-links">
                 <a href="login.html">Login</a>  <!-- رابط تسجيل الدخول -->

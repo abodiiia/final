@@ -197,6 +197,9 @@
 
     <!-- كود JavaScript لتسجيل الدخول -->
     <script>
+        // Clear any existing login data when user reaches the login page
+        localStorage.removeItem("user");
+        
         document.getElementById("loginBtn").addEventListener("click", async function () {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;

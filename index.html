@@ -1,3 +1,53 @@
+
+<script>
+function redirectToLogin() {
+    window.location.href = "Login.html";
+}
+
+function redirectToDashboard() {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    
+    if (user.role === "admin") {
+        window.location.href = "dashboard-Admin.html";
+    } else if (user.role === "owner") {
+        window.location.href = "dashboard-businesses.html";
+    } else {
+        window.location.href = "dashboard-user.html";
+    }
+}
+
+function logout() {
+    localStorage.removeItem("user");
+    location.reload();
+}
+
+// Check login status on page load
+document.addEventListener("DOMContentLoaded", function() {
+    const user = localStorage.getItem("user");
+    
+    if (user && user !== "undefined" && user !== "null") {
+        try {
+            // Validate that the user object is properly formatted
+            const userData = JSON.parse(user);
+            if (userData && userData.id) {
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('dashboardBtn').style.display = 'block';
+            } else {
+                throw new Error("Invalid user data");
+            }
+        } catch (e) {
+            console.error("Invalid user data in localStorage", e);
+            localStorage.removeItem("user");
+            document.getElementById('loginBtn').style.display = 'block';
+            document.getElementById('dashboardBtn').style.display = 'none';
+        }
+    } else {
+        document.getElementById('loginBtn').style.display = 'block';
+        document.getElementById('dashboardBtn').style.display = 'none';
+    }
+});
+</script>
+
 <html lang="en"><head>
     <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">

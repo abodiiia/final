@@ -171,6 +171,48 @@
     </div>
 
     <script>
+        // Function to save booking to database
+        async function saveBookingToDatabase(booking) {
+            try {
+                const userData = localStorage.getItem('user');
+                if (!userData) {
+                    throw new Error('User not logged in');
+                }
+                
+                const user = JSON.parse(userData);
+                
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                    },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        itemId: booking.itemId,
+                        itemType: booking.itemType,
+                        itemName: booking.itemName,
+                        startDate: booking.startDate || null,
+                        endDate: booking.endDate || null,
+                        eventDate: booking.eventDate || null,
+                        guests: booking.guests || 1,
+                        attendees: booking.attendees || 1,
+                        totalPrice: booking.totalPrice,
+                        status: 'confirmed'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save booking');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error saving booking to database:', error);
+                throw error;
+            }
+        }
+        
         // Retrieve booking details from localStorage
         let days = localStorage.getItem("stayDays") || 2;
         let totalAmount = localStorage.getItem("totalPrice") || 400;
@@ -237,13 +279,22 @@
             localStorage.setItem("bookings", JSON.stringify(bookings));
             localStorage.setItem("paymentStatus", "paid");
             
-            // Clean up temporary data
-            localStorage.removeItem("tempBookingDetails");
+            // Save booking to database
+            saveBookingToDatabase(booking)
+                .then(() => {
+                    // Clean up temporary data
+                    localStorage.removeItem("tempBookingDetails");
+                    
+                    alert("Payment successful! 🎉");
             
-            alert("Payment successful! 🎉");
-    
-            // Redirect to confirmation page
-            window.location.href = "confirmation.html";
+                    // Redirect to confirmation page
+                    window.location.href = "confirmation.html";
+                })
+                .catch(error => {
+                    console.error("Error saving booking:", error);
+                    alert("Payment successful, but we encountered an issue saving your booking. Please check your dashboard later.");
+                    window.location.href = "confirmation.html";
+                });
         });
     </script>
     

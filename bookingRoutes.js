@@ -1,43 +1,78 @@
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const Booking = require("../models/Booking");
-const Hotel = require("../models/Hotel");
-const Event = require("../models/Event");
+const Booking = require('./models/Booking');
+const Hotel = require('./models/Hotel');
+const Event = require('./models/Event');
+
+// Get bookings for the logged-in user
+router.get('/my-bookings', async (req, res) => {
+    try {
+        // In a real app, we would verify the JWT token
+        // and extract user ID from it
+        const userId = req.headers.authorization ? 
+            req.headers.authorization.split(' ')[1] : null;
+            
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        
+        // Get bookings from localStorage (simulating database)
+        const allBookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        const userBookings = allBookings.filter(booking => booking.userId === userId);
+        
+        res.json(userBookings);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ message: "Error fetching bookings" });
+    }
+});
 
 // Create a new booking
-router.post("/", async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const { userId, itemId, itemType, startDate, endDate, guests, totalPrice } = req.body;
+        const { 
+            userId, 
+            itemId, 
+            itemType, 
+            itemName,
+            startDate, 
+            endDate, 
+            eventDate,
+            guests, 
+            attendees,
+            totalPrice 
+        } = req.body;
         
         if (!userId || !itemId || !itemType) {
             return res.status(400).json({ message: "Missing required fields" });
         }
         
-        // Verify the hotel or event exists
-        let item;
-        if (itemType === 'hotel') {
-            item = await Hotel.findById(itemId);
-        } else if (itemType === 'event') {
-            item = await Event.findById(itemId);
-        }
-        
-        if (!item) {
-            return res.status(404).json({ message: `${itemType} not found` });
-        }
-        
-        const booking = new Booking({
+        // Create booking object
+        const booking = {
+            id: Date.now().toString(),
             userId,
             itemId,
             itemType,
+            itemName,
             startDate,
             endDate,
+            eventDate,
             guests,
+            attendees,
             totalPrice,
-            status: 'confirmed'
-        });
+            status: 'confirmed',
+            createdAt: new Date().toISOString()
+        };
         
-        await booking.save();
+        // Get existing bookings or create empty array
+        const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+        
+        // Add new booking
+        bookings.push(booking);
+        
+        // Save to localStorage (simulating database)
+        localStorage.setItem("bookings", JSON.stringify(bookings));
         
         res.status(201).json({
             message: "Booking created successfully",
@@ -49,32 +84,30 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Get user bookings
-router.get("/user/:userId", async (req, res) => {
+// Cancel a booking
+router.put('/:id/cancel', async (req, res) => {
     try {
-        const bookings = await Booking.find({ userId: req.params.userId });
-        res.status(200).json(bookings);
-    } catch (error) {
-        console.error("Error fetching bookings:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
-
-// Cancel booking
-router.put("/:id/cancel", async (req, res) => {
-    try {
-        const booking = await Booking.findById(req.params.id);
+        const bookingId = req.params.id;
         
-        if (!booking) {
+        // Get existing bookings
+        const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+        
+        // Find the booking
+        const index = bookings.findIndex(b => b.id === bookingId || b._id === bookingId);
+        
+        if (index === -1) {
             return res.status(404).json({ message: "Booking not found" });
         }
         
-        booking.status = 'cancelled';
-        await booking.save();
+        // Update booking status
+        bookings[index].status = 'cancelled';
         
-        res.status(200).json({
+        // Save updated bookings
+        localStorage.setItem("bookings", JSON.stringify(bookings));
+        
+        res.json({
             message: "Booking cancelled successfully",
-            booking
+            booking: bookings[index]
         });
     } catch (error) {
         console.error("Error cancelling booking:", error);

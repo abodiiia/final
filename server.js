@@ -6,7 +6,7 @@ const cors = require("cors");
 const authRoutes = require("./models/routes/authRoutes");
 const hotelRoutes = require("./models/routes/hotelRoutes");
 const eventRoutes = require("./models/routes/eventRoutes");
-const bookingRoutes = require("./models/routes/bookingRoutes");
+const bookingRoutes = require("./bookingRoutes");
 
 const app = express();
 

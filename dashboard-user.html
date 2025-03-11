@@ -413,31 +413,27 @@
 }
 
 .payment-info span {
-    display: block;
-    font-size: 14px;
-    color: #333;
-}
+            display: block;
+            font-size: 14px;
+            color: #333;
+        }
 
-@media (max-width: 900px) {
-    .menu {
-        width: 50px;
-    }
-    .menu:hover {
-        width: 200px;
-    }
-    .dashboard {
-        margin-left: 50px;
-    }
-    .menu:hover ~ .dashboard {
-        margin-left: 200px;
-    }
-    .booking-card {
-        width: 100%;
-    }
-    .header {
-        padding: 10px;
-    }
-}
+        .cancel-btn {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #C0392B;
+        }
     </style>
 
 
@@ -713,6 +709,22 @@
         .button-group {
             display: flex;
         }
+        .cancel-btn {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #C0392B;
+        }
     </style>
 </head>
 <body>
@@ -745,29 +757,29 @@
                 async function loadUserBookings() {
                     const userData = localStorage.getItem('user');
                     if (!userData) return;
-                    
+
                     const user = JSON.parse(userData);
                     const bookingsContainer = document.getElementById('bookings-container');
-                    
+
                     try {
                         const response = await fetch(`/api/bookings/user/${user.id}`);
-                        
+
                         if (response.ok) {
                             const bookings = await response.json();
                             bookingsContainer.innerHTML = '';
-                            
+
                             if (bookings.length === 0) {
                                 bookingsContainer.innerHTML = '<p>You have no bookings yet.</p>';
                                 return;
                             }
-                            
+
                             bookings.forEach(booking => {
                                 const bookingCard = document.createElement('div');
                                 bookingCard.className = 'booking-card';
-                                
+
                                 const startDate = new Date(booking.startDate).toLocaleDateString();
                                 const endDate = booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A';
-                                
+
                                 bookingCard.innerHTML = `
                                     <h3>${booking.itemType.charAt(0).toUpperCase() + booking.itemType.slice(1)} Booking</h3>
                                     <p>Date: ${startDate} ${booking.endDate ? 'to ' + endDate : ''}</p>
@@ -776,7 +788,7 @@
                                     <p>Status: <span class="${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></p>
                                     ${booking.status !== 'cancelled' ? `<button class="cancel-btn" onclick="cancelBooking('${booking._id}')">Cancel Booking</button>` : ''}
                                 `;
-                                
+
                                 bookingsContainer.appendChild(bookingCard);
                             });
                         } else {
@@ -787,7 +799,7 @@
                         bookingsContainer.innerHTML = '<p>Error loading bookings. Please try again later.</p>';
                     }
                 }
-                
+
                 // Function to cancel a booking
                 async function cancelBooking(bookingId) {
                     if (confirm('Are you sure you want to cancel this booking?')) {
@@ -795,7 +807,7 @@
                             const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
                                 method: 'PUT'
                             });
-                            
+
                             if (response.ok) {
                                 alert('Booking cancelled successfully');
                                 loadUserBookings(); // Reload bookings
@@ -808,7 +820,7 @@
                         }
                     }
                 }
-                
+
                 // Load bookings when page loads
                 document.addEventListener('DOMContentLoaded', function() {
                     checkLoggedIn();
